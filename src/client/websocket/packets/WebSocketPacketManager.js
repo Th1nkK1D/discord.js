@@ -1,16 +1,17 @@
-const Constants = require('../../../util/Constants');
+'use strict';
 
-const BeforeReadyWhitelist = [
-  Constants.WSEvents.READY,
-  Constants.WSEvents.GUILD_CREATE,
-  Constants.WSEvents.GUILD_DELETE,
-  Constants.WSEvents.GUILD_MEMBERS_CHUNK,
-  Constants.WSEvents.GUILD_MEMBER_ADD,
-  Constants.WSEvents.GUILD_MEMBER_REMOVE,
-];
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-class WebSocketPacketManager {
-  constructor(websocketManager) {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Constants = require('../../../util/Constants');
+
+var BeforeReadyWhitelist = [Constants.WSEvents.READY, Constants.WSEvents.GUILD_CREATE, Constants.WSEvents.GUILD_DELETE, Constants.WSEvents.GUILD_MEMBERS_CHUNK, Constants.WSEvents.GUILD_MEMBER_ADD, Constants.WSEvents.GUILD_MEMBER_REMOVE];
+
+var WebSocketPacketManager = function () {
+  function WebSocketPacketManager(websocketManager) {
+    _classCallCheck(this, WebSocketPacketManager);
+
     this.ws = websocketManager;
     this.handlers = {};
     this.queue = [];
@@ -51,75 +52,88 @@ class WebSocketPacketManager {
     this.register(Constants.WSEvents.MESSAGE_REACTION_REMOVE_ALL, require('./handlers/MessageReactionRemoveAll'));
   }
 
-  get client() {
-    return this.ws.client;
-  }
-
-  register(event, Handler) {
-    this.handlers[event] = new Handler(this);
-  }
-
-  handleQueue() {
-    this.queue.forEach((element, index) => {
-      this.handle(this.queue[index]);
-      this.queue.splice(index, 1);
-    });
-  }
-
-  setSequence(s) {
-    if (s && s > this.ws.sequence) this.ws.sequence = s;
-  }
-
-  handle(packet) {
-    if (packet.op === Constants.OPCodes.RECONNECT) {
-      this.setSequence(packet.s);
-      this.ws.tryReconnect();
-      return false;
+  _createClass(WebSocketPacketManager, [{
+    key: 'register',
+    value: function register(event, Handler) {
+      this.handlers[event] = new Handler(this);
     }
+  }, {
+    key: 'handleQueue',
+    value: function handleQueue() {
+      var _this = this;
 
-    if (packet.op === Constants.OPCodes.INVALID_SESSION) {
-      if (packet.d) {
-        setTimeout(() => {
-          this.ws._sendResume();
-        }, 2500);
-      } else {
-        this.ws.sessionID = null;
-        this.ws._sendNewIdentify();
-      }
-      return false;
-    }
-
-    if (packet.op === Constants.OPCodes.HEARTBEAT_ACK) {
-      this.ws.client._pong(this.ws.client._pingTimestamp);
-      this.ws.lastHeartbeatAck = true;
-      this.ws.client.emit('debug', 'Heartbeat acknowledged');
-    } else if (packet.op === Constants.OPCodes.HEARTBEAT) {
-      this.client.ws.send({
-        op: Constants.OPCodes.HEARTBEAT,
-        d: this.client.ws.sequence,
+      this.queue.forEach(function (element, index) {
+        _this.handle(_this.queue[index]);
+        _this.queue.splice(index, 1);
       });
-      this.ws.client.emit('debug', 'Received gateway heartbeat');
     }
-
-    if (this.ws.status === Constants.Status.RECONNECTING) {
-      this.ws.reconnecting = false;
-      this.ws.checkIfReady();
+  }, {
+    key: 'setSequence',
+    value: function setSequence(s) {
+      if (s && s > this.ws.sequence) this.ws.sequence = s;
     }
+  }, {
+    key: 'handle',
+    value: function handle(packet) {
+      var _this2 = this;
 
-    this.setSequence(packet.s);
-
-    if (this.ws.disabledEvents[packet.t] !== undefined) return false;
-
-    if (this.ws.status !== Constants.Status.READY) {
-      if (BeforeReadyWhitelist.indexOf(packet.t) === -1) {
-        this.queue.push(packet);
+      if (packet.op === Constants.OPCodes.RECONNECT) {
+        this.setSequence(packet.s);
+        this.ws.tryReconnect();
         return false;
       }
-    }
 
-    if (this.handlers[packet.t]) return this.handlers[packet.t].handle(packet);
-    return false;
-  }
-}
+      if (packet.op === Constants.OPCodes.INVALID_SESSION) {
+        if (packet.d) {
+          setTimeout(function () {
+            _this2.ws._sendResume();
+          }, 2500);
+        } else {
+          this.ws.sessionID = null;
+          this.ws._sendNewIdentify();
+        }
+        return false;
+      }
+
+      if (packet.op === Constants.OPCodes.HEARTBEAT_ACK) {
+        this.ws.client._pong(this.ws.client._pingTimestamp);
+        this.ws.lastHeartbeatAck = true;
+        this.ws.client.emit('debug', 'Heartbeat acknowledged');
+      } else if (packet.op === Constants.OPCodes.HEARTBEAT) {
+        this.client.ws.send({
+          op: Constants.OPCodes.HEARTBEAT,
+          d: this.client.ws.sequence
+        });
+        this.ws.client.emit('debug', 'Received gateway heartbeat');
+      }
+
+      if (this.ws.status === Constants.Status.RECONNECTING) {
+        this.ws.reconnecting = false;
+        this.ws.checkIfReady();
+      }
+
+      this.setSequence(packet.s);
+
+      if (this.ws.disabledEvents[packet.t] !== undefined) return false;
+
+      if (this.ws.status !== Constants.Status.READY) {
+        if (BeforeReadyWhitelist.indexOf(packet.t) === -1) {
+          this.queue.push(packet);
+          return false;
+        }
+      }
+
+      if (this.handlers[packet.t]) return this.handlers[packet.t].handle(packet);
+      return false;
+    }
+  }, {
+    key: 'client',
+    get: function get() {
+      return this.ws.client;
+    }
+  }]);
+
+  return WebSocketPacketManager;
+}();
 
 module.exports = WebSocketPacketManager;

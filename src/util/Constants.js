@@ -1,3 +1,5 @@
+'use strict';
+
 exports.Package = require('../../package.json');
 
 /**
@@ -59,9 +61,9 @@ exports.DefaultOptions = {
       $browser: 'discord.js',
       $device: 'discord.js',
       $referrer: '',
-      $referring_domain: '',
-    },
-  },
+      $referring_domain: ''
+    }
+  }
 };
 
 exports.Errors = {
@@ -75,96 +77,182 @@ exports.Errors = {
   BAD_LOGIN: 'Incorrect login details were provided.',
   INVALID_SHARD: 'Invalid shard settings were provided.',
   SHARDING_REQUIRED: 'This session would have handled too many guilds - Sharding is required.',
-  INVALID_TOKEN: 'An invalid token was provided.',
+  INVALID_TOKEN: 'An invalid token was provided.'
 };
 
-const PROTOCOL_VERSION = exports.PROTOCOL_VERSION = 6;
-const HOST = exports.HOST = `https://discordapp.com`;
-const API = exports.API = `${HOST}/api/v${PROTOCOL_VERSION}`;
-const Endpoints = exports.Endpoints = {
+var PROTOCOL_VERSION = exports.PROTOCOL_VERSION = 6;
+var HOST = exports.HOST = 'https://discordapp.com';
+var API = exports.API = HOST + '/api/v' + PROTOCOL_VERSION;
+var Endpoints = exports.Endpoints = {
   // General
-  login: `${API}/auth/login`,
-  logout: `${API}/auth/logout`,
-  gateway: `${API}/gateway`,
-  botGateway: `${API}/gateway/bot`,
-  invite: id => `${API}/invite/${id}`,
-  inviteLink: id => `https://discord.gg/${id}`,
-  assets: asset => `${HOST}/assets/${asset}`,
+  login: API + '/auth/login',
+  logout: API + '/auth/logout',
+  gateway: API + '/gateway',
+  botGateway: API + '/gateway/bot',
+  invite: function invite(id) {
+    return API + '/invite/' + id;
+  },
+  inviteLink: function inviteLink(id) {
+    return 'https://discord.gg/' + id;
+  },
+  assets: function assets(asset) {
+    return HOST + '/assets/' + asset;
+  },
   CDN: 'https://cdn.discordapp.com',
 
   // Users
-  user: userID => `${API}/users/${userID}`,
-  userChannels: userID => `${Endpoints.user(userID)}/channels`,
-  userProfile: userID => `${Endpoints.user(userID)}/profile`,
-  avatar: (userID, avatar) => {
-    if (userID === '1') return avatar;
-    return `${Endpoints.CDN}/avatars/${userID}/${avatar}.${avatar.startsWith('a_') ? 'gif' : 'jpg'}?size=1024`;
+  user: function user(userID) {
+    return API + '/users/' + userID;
   },
-  me: `${API}/users/@me`,
-  meGuild: guildID => `${Endpoints.me}/guilds/${guildID}`,
-  meChannels: `${API}/users/@me/channels`,
-  meMentions: (limit, roles, everyone, guildID) =>
-    `users/@me/mentions?limit=${limit}&roles=${roles}&everyone=${everyone}${guildID ? `&guild_id=${guildID}` : ''}`,
-  relationships: userID => `${Endpoints.user(userID)}/relationships`,
-  note: userID => `${Endpoints.me}/notes/${userID}`,
+  userChannels: function userChannels(userID) {
+    return Endpoints.user(userID) + '/channels';
+  },
+  userProfile: function userProfile(userID) {
+    return Endpoints.user(userID) + '/profile';
+  },
+  avatar: function avatar(userID, _avatar) {
+    if (userID === '1') return _avatar;
+    return Endpoints.CDN + '/avatars/' + userID + '/' + _avatar + '.' + (_avatar.startsWith('a_') ? 'gif' : 'jpg') + '?size=1024';
+  },
+  me: API + '/users/@me',
+  meGuild: function meGuild(guildID) {
+    return Endpoints.me + '/guilds/' + guildID;
+  },
+  meChannels: API + '/users/@me/channels',
+  meMentions: function meMentions(limit, roles, everyone, guildID) {
+    return 'users/@me/mentions?limit=' + limit + '&roles=' + roles + '&everyone=' + everyone + (guildID ? '&guild_id=' + guildID : '');
+  },
+  relationships: function relationships(userID) {
+    return Endpoints.user(userID) + '/relationships';
+  },
+  note: function note(userID) {
+    return Endpoints.me + '/notes/' + userID;
+  },
 
-  voiceRegions: `${API}/voice/regions`,
+  voiceRegions: API + '/voice/regions',
 
   // Guilds
-  guilds: `${API}/guilds`,
-  guild: guildID => `${Endpoints.guilds}/${guildID}`,
-  guildIcon: (guildID, hash) => `${Endpoints.CDN}/icons/${guildID}/${hash}.jpg`,
-  guildSplash: (guildID, hash) => `${Endpoints.CDN}/splashes/${guildID}/${hash}.jpg`,
-  guildPrune: guildID => `${Endpoints.guild(guildID)}/prune`,
-  guildEmbed: guildID => `${Endpoints.guild(guildID)}/embed`,
-  guildInvites: guildID => `${Endpoints.guild(guildID)}/invites`,
-  guildRoles: guildID => `${Endpoints.guild(guildID)}/roles`,
-  guildRole: (guildID, roleID) => `${Endpoints.guildRoles(guildID)}/${roleID}`,
-  guildBans: guildID => `${Endpoints.guild(guildID)}/bans`,
-  guildIntegrations: guildID => `${Endpoints.guild(guildID)}/integrations`,
-  guildMembers: guildID => `${Endpoints.guild(guildID)}/members`,
-  guildMember: (guildID, memberID) => `${Endpoints.guildMembers(guildID)}/${memberID}`,
-  guildMemberRole: (guildID, memberID, roleID) => `${Endpoints.guildMember(guildID, memberID)}/roles/${roleID}`,
-  guildMemberNickname: guildID => `${Endpoints.guildMember(guildID, '@me')}/nick`,
-  guildChannels: guildID => `${Endpoints.guild(guildID)}/channels`,
-  guildEmojis: guildID => `${Endpoints.guild(guildID)}/emojis`,
-  guildEmoji: (guildID, emojiID) => `${Endpoints.guildEmojis(guildID)}/${emojiID}`,
-  guildSearch: guildID => `${Endpoints.guild(guildID)}/messages/search`,
-  guildVoiceRegions: guildID => `${Endpoints.guild(guildID)}/regions`,
+  guilds: API + '/guilds',
+  guild: function guild(guildID) {
+    return Endpoints.guilds + '/' + guildID;
+  },
+  guildIcon: function guildIcon(guildID, hash) {
+    return Endpoints.CDN + '/icons/' + guildID + '/' + hash + '.jpg';
+  },
+  guildSplash: function guildSplash(guildID, hash) {
+    return Endpoints.CDN + '/splashes/' + guildID + '/' + hash + '.jpg';
+  },
+  guildPrune: function guildPrune(guildID) {
+    return Endpoints.guild(guildID) + '/prune';
+  },
+  guildEmbed: function guildEmbed(guildID) {
+    return Endpoints.guild(guildID) + '/embed';
+  },
+  guildInvites: function guildInvites(guildID) {
+    return Endpoints.guild(guildID) + '/invites';
+  },
+  guildRoles: function guildRoles(guildID) {
+    return Endpoints.guild(guildID) + '/roles';
+  },
+  guildRole: function guildRole(guildID, roleID) {
+    return Endpoints.guildRoles(guildID) + '/' + roleID;
+  },
+  guildBans: function guildBans(guildID) {
+    return Endpoints.guild(guildID) + '/bans';
+  },
+  guildIntegrations: function guildIntegrations(guildID) {
+    return Endpoints.guild(guildID) + '/integrations';
+  },
+  guildMembers: function guildMembers(guildID) {
+    return Endpoints.guild(guildID) + '/members';
+  },
+  guildMember: function guildMember(guildID, memberID) {
+    return Endpoints.guildMembers(guildID) + '/' + memberID;
+  },
+  guildMemberRole: function guildMemberRole(guildID, memberID, roleID) {
+    return Endpoints.guildMember(guildID, memberID) + '/roles/' + roleID;
+  },
+  guildMemberNickname: function guildMemberNickname(guildID) {
+    return Endpoints.guildMember(guildID, '@me') + '/nick';
+  },
+  guildChannels: function guildChannels(guildID) {
+    return Endpoints.guild(guildID) + '/channels';
+  },
+  guildEmojis: function guildEmojis(guildID) {
+    return Endpoints.guild(guildID) + '/emojis';
+  },
+  guildEmoji: function guildEmoji(guildID, emojiID) {
+    return Endpoints.guildEmojis(guildID) + '/' + emojiID;
+  },
+  guildSearch: function guildSearch(guildID) {
+    return Endpoints.guild(guildID) + '/messages/search';
+  },
+  guildVoiceRegions: function guildVoiceRegions(guildID) {
+    return Endpoints.guild(guildID) + '/regions';
+  },
 
   // Channels
-  channels: `${API}/channels`,
-  channel: channelID => `${Endpoints.channels}/${channelID}`,
-  channelMessages: channelID => `${Endpoints.channel(channelID)}/messages`,
-  channelInvites: channelID => `${Endpoints.channel(channelID)}/invites`,
-  channelTyping: channelID => `${Endpoints.channel(channelID)}/typing`,
-  channelPermissions: channelID => `${Endpoints.channel(channelID)}/permissions`,
-  channelMessage: (channelID, messageID) => `${Endpoints.channelMessages(channelID)}/${messageID}`,
-  channelWebhooks: channelID => `${Endpoints.channel(channelID)}/webhooks`,
-  channelSearch: channelID => `${Endpoints.channelMessages(channelID)}/search`,
+  channels: API + '/channels',
+  channel: function channel(channelID) {
+    return Endpoints.channels + '/' + channelID;
+  },
+  channelMessages: function channelMessages(channelID) {
+    return Endpoints.channel(channelID) + '/messages';
+  },
+  channelInvites: function channelInvites(channelID) {
+    return Endpoints.channel(channelID) + '/invites';
+  },
+  channelTyping: function channelTyping(channelID) {
+    return Endpoints.channel(channelID) + '/typing';
+  },
+  channelPermissions: function channelPermissions(channelID) {
+    return Endpoints.channel(channelID) + '/permissions';
+  },
+  channelMessage: function channelMessage(channelID, messageID) {
+    return Endpoints.channelMessages(channelID) + '/' + messageID;
+  },
+  channelWebhooks: function channelWebhooks(channelID) {
+    return Endpoints.channel(channelID) + '/webhooks';
+  },
+  channelSearch: function channelSearch(channelID) {
+    return Endpoints.channelMessages(channelID) + '/search';
+  },
 
-  dmChannelRecipient: (channelID, recipientID) => `${Endpoints.channel(channelID)}/recipients/${recipientID}`,
+  dmChannelRecipient: function dmChannelRecipient(channelID, recipientID) {
+    return Endpoints.channel(channelID) + '/recipients/' + recipientID;
+  },
 
   // Message reactions
-  messageReactions: (channelID, messageID) => `${Endpoints.channelMessage(channelID, messageID)}/reactions`,
-  messageReaction:
-    (channel, msg, emoji, limit) =>
-          `${Endpoints.messageReactions(channel, msg)}/${emoji}` +
-          `${limit ? `?limit=${limit}` : ''}`,
-  selfMessageReaction: (channel, msg, emoji, limit) =>
-          `${Endpoints.messageReaction(channel, msg, emoji, limit)}/@me`,
-  userMessageReaction: (channel, msg, emoji, limit, id) =>
-          `${Endpoints.messageReaction(channel, msg, emoji, limit)}/${id}`,
+  messageReactions: function messageReactions(channelID, messageID) {
+    return Endpoints.channelMessage(channelID, messageID) + '/reactions';
+  },
+  messageReaction: function messageReaction(channel, msg, emoji, limit) {
+    return Endpoints.messageReactions(channel, msg) + '/' + emoji + ('' + (limit ? '?limit=' + limit : ''));
+  },
+  selfMessageReaction: function selfMessageReaction(channel, msg, emoji, limit) {
+    return Endpoints.messageReaction(channel, msg, emoji, limit) + '/@me';
+  },
+  userMessageReaction: function userMessageReaction(channel, msg, emoji, limit, id) {
+    return Endpoints.messageReaction(channel, msg, emoji, limit) + '/' + id;
+  },
 
   // Webhooks
-  webhook: (webhookID, token) => `${API}/webhooks/${webhookID}${token ? `/${token}` : ''}`,
+  webhook: function webhook(webhookID, token) {
+    return API + '/webhooks/' + webhookID + (token ? '/' + token : '');
+  },
 
   // OAuth
-  oauth2Application: appID => `${API}/oauth2/applications/${appID}`,
-  getApp: id => `${API}/oauth2/authorize?client_id=${id}`,
+  oauth2Application: function oauth2Application(appID) {
+    return API + '/oauth2/applications/' + appID;
+  },
+  getApp: function getApp(id) {
+    return API + '/oauth2/authorize?client_id=' + id;
+  },
 
   // Emoji
-  emoji: emojiID => `${Endpoints.CDN}/emojis/${emojiID}.png`,
+  emoji: function emoji(emojiID) {
+    return Endpoints.CDN + '/emojis/' + emojiID + '.png';
+  }
 };
 
 /**
@@ -183,7 +271,7 @@ exports.Status = {
   RECONNECTING: 2,
   IDLE: 3,
   NEARLY: 4,
-  DISCONNECTED: 5,
+  DISCONNECTED: 5
 };
 
 /**
@@ -200,14 +288,14 @@ exports.VoiceStatus = {
   CONNECTING: 1,
   AUTHENTICATING: 2,
   RECONNECTING: 3,
-  DISCONNECTED: 4,
+  DISCONNECTED: 4
 };
 
 exports.ChannelTypes = {
   TEXT: 0,
   DM: 1,
   VOICE: 2,
-  GROUP_DM: 3,
+  GROUP_DM: 3
 };
 
 exports.OPCodes = {
@@ -222,7 +310,7 @@ exports.OPCodes = {
   REQUEST_GUILD_MEMBERS: 8,
   INVALID_SESSION: 9,
   HELLO: 10,
-  HEARTBEAT_ACK: 11,
+  HEARTBEAT_ACK: 11
 };
 
 exports.VoiceOPCodes = {
@@ -231,7 +319,7 @@ exports.VoiceOPCodes = {
   READY: 2,
   HEARTBEAT: 3,
   SESSION_DESCRIPTION: 4,
-  SPEAKING: 5,
+  SPEAKING: 5
 };
 
 exports.Events = {
@@ -276,7 +364,7 @@ exports.Events = {
   RECONNECTING: 'reconnecting',
   ERROR: 'error',
   WARN: 'warn',
-  DEBUG: 'debug',
+  DEBUG: 'debug'
 };
 
 /**
@@ -350,7 +438,7 @@ exports.WSEvents = {
   TYPING_START: 'TYPING_START',
   VOICE_SERVER_UPDATE: 'VOICE_SERVER_UPDATE',
   RELATIONSHIP_ADD: 'RELATIONSHIP_ADD',
-  RELATIONSHIP_REMOVE: 'RELATIONSHIP_REMOVE',
+  RELATIONSHIP_REMOVE: 'RELATIONSHIP_REMOVE'
 };
 
 exports.MessageTypes = {
@@ -360,7 +448,7 @@ exports.MessageTypes = {
   3: 'CALL',
   4: 'CHANNEL_NAME_CHANGE',
   5: 'CHANNEL_ICON_CHANGE',
-  6: 'PINS_ADD',
+  6: 'PINS_ADD'
 };
 
 exports.DefaultAvatars = {
@@ -368,7 +456,7 @@ exports.DefaultAvatars = {
   GREY: '322c936a8c8be1b803cd94861bdfa868',
   GREEN: 'dd4dbc0016779df1378e7812eabaa04d',
   ORANGE: '0e291f67c9274a1abdddeb3fd919cbaa',
-  RED: '1cbd08c76f8af6dddce02c5138971129',
+  RED: '1cbd08c76f8af6dddce02c5138971129'
 };
 
 exports.Colors = {
@@ -396,5 +484,5 @@ exports.Colors = {
   BLURPLE: 0x7289DA,
   GREYPLE: 0x99AAB5,
   DARK_BUT_NOT_BLACK: 0x2C2F33,
-  NOT_QUITE_BLACK: 0x23272A,
+  NOT_QUITE_BLACK: 0x23272A
 };

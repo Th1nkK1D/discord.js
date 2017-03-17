@@ -1,33 +1,56 @@
-const Action = require('./Action');
-const Constants = require('../../util/Constants');
-const Util = require('../../util/Util');
+'use strict';
 
-class UserUpdateAction extends Action {
-  handle(data) {
-    const client = this.client;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-    if (client.user) {
-      if (client.user.equals(data)) {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Action = require('./Action');
+var Constants = require('../../util/Constants');
+var Util = require('../../util/Util');
+
+var UserUpdateAction = function (_Action) {
+  _inherits(UserUpdateAction, _Action);
+
+  function UserUpdateAction() {
+    _classCallCheck(this, UserUpdateAction);
+
+    return _possibleConstructorReturn(this, (UserUpdateAction.__proto__ || Object.getPrototypeOf(UserUpdateAction)).apply(this, arguments));
+  }
+
+  _createClass(UserUpdateAction, [{
+    key: 'handle',
+    value: function handle(data) {
+      var client = this.client;
+
+      if (client.user) {
+        if (client.user.equals(data)) {
+          return {
+            old: client.user,
+            updated: client.user
+          };
+        }
+
+        var oldUser = Util.cloneObject(client.user);
+        client.user.patch(data);
+        client.emit(Constants.Events.USER_UPDATE, oldUser, client.user);
         return {
-          old: client.user,
-          updated: client.user,
+          old: oldUser,
+          updated: client.user
         };
       }
 
-      const oldUser = Util.cloneObject(client.user);
-      client.user.patch(data);
-      client.emit(Constants.Events.USER_UPDATE, oldUser, client.user);
       return {
-        old: oldUser,
-        updated: client.user,
+        old: null,
+        updated: null
       };
     }
+  }]);
 
-    return {
-      old: null,
-      updated: null,
-    };
-  }
-}
+  return UserUpdateAction;
+}(Action);
 
 module.exports = UserUpdateAction;

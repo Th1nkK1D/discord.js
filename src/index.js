@@ -1,4 +1,6 @@
-const Util = require('./util/Util');
+'use strict';
+
+var Util = require('./util/Util');
 
 module.exports = {
   // "Root" classes (starting points)
@@ -51,7 +53,7 @@ module.exports = {
   TextChannel: require('./structures/TextChannel'),
   User: require('./structures/User'),
   VoiceChannel: require('./structures/VoiceChannel'),
-  Webhook: require('./structures/Webhook'),
+  Webhook: require('./structures/Webhook')
 };
 
 if (require('os').platform() === 'browser') window.Discord = module.exports; // eslint-disable-line no-undef

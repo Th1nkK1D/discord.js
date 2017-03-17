@@ -1,6 +1,12 @@
-const PartialGuild = require('./PartialGuild');
-const PartialGuildChannel = require('./PartialGuildChannel');
-const Constants = require('../util/Constants');
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var PartialGuild = require('./PartialGuild');
+var PartialGuildChannel = require('./PartialGuildChannel');
+var Constants = require('../util/Constants');
 
 /*
 { max_age: 86400,
@@ -27,8 +33,11 @@ const Constants = require('../util/Constants');
  * Represents an invitation to a guild channel.
  * <warn>The only guaranteed properties are `code`, `guild` and `channel`. Other properties can be missing.</warn>
  */
-class Invite {
-  constructor(client, data) {
+
+var Invite = function () {
+  function Invite(client, data) {
+    _classCallCheck(this, Invite);
+
     /**
      * The client that instantiated the invite
      * @name Invite#client
@@ -40,120 +49,143 @@ class Invite {
     this.setup(data);
   }
 
-  setup(data) {
-    /**
-     * The guild the invite is for. If this guild is already known, this will be a Guild object. If the guild is
-     * unknown, this will be a PartialGuild object.
-     * @type {Guild|PartialGuild}
-     */
-    this.guild = this.client.guilds.get(data.guild.id) || new PartialGuild(this.client, data.guild);
-
-    /**
-     * The code for this invite
-     * @type {string}
-     */
-    this.code = data.code;
-
-    /**
-     * Whether or not this invite is temporary
-     * @type {boolean}
-     */
-    this.temporary = data.temporary;
-
-    /**
-     * The maximum age of the invite, in seconds
-     * @type {?number}
-     */
-    this.maxAge = data.max_age;
-
-    /**
-     * How many times this invite has been used
-     * @type {number}
-     */
-    this.uses = data.uses;
-
-    /**
-     * The maximum uses of this invite
-     * @type {number}
-     */
-    this.maxUses = data.max_uses;
-
-    if (data.inviter) {
+  _createClass(Invite, [{
+    key: 'setup',
+    value: function setup(data) {
       /**
-       * The user who created this invite
-       * @type {User}
+       * The guild the invite is for. If this guild is already known, this will be a Guild object. If the guild is
+       * unknown, this will be a PartialGuild object.
+       * @type {Guild|PartialGuild}
        */
-      this.inviter = this.client.dataManager.newUser(data.inviter);
+      this.guild = this.client.guilds.get(data.guild.id) || new PartialGuild(this.client, data.guild);
+
+      /**
+       * The code for this invite
+       * @type {string}
+       */
+      this.code = data.code;
+
+      /**
+       * Whether or not this invite is temporary
+       * @type {boolean}
+       */
+      this.temporary = data.temporary;
+
+      /**
+       * The maximum age of the invite, in seconds
+       * @type {?number}
+       */
+      this.maxAge = data.max_age;
+
+      /**
+       * How many times this invite has been used
+       * @type {number}
+       */
+      this.uses = data.uses;
+
+      /**
+       * The maximum uses of this invite
+       * @type {number}
+       */
+      this.maxUses = data.max_uses;
+
+      if (data.inviter) {
+        /**
+         * The user who created this invite
+         * @type {User}
+         */
+        this.inviter = this.client.dataManager.newUser(data.inviter);
+      }
+
+      /**
+       * The channel the invite is for. If this channel is already known, this will be a GuildChannel object.
+       * If the channel is unknown, this will be a PartialGuildChannel object.
+       * @type {GuildChannel|PartialGuildChannel}
+       */
+      this.channel = this.client.channels.get(data.channel.id) || new PartialGuildChannel(this.client, data.channel);
+
+      /**
+       * The timestamp the invite was created at
+       * @type {number}
+       */
+      this.createdTimestamp = new Date(data.created_at).getTime();
     }
 
     /**
-     * The channel the invite is for. If this channel is already known, this will be a GuildChannel object.
-     * If the channel is unknown, this will be a PartialGuildChannel object.
-     * @type {GuildChannel|PartialGuildChannel}
+     * The time the invite was created
+     * @type {Date}
+     * @readonly
      */
-    this.channel = this.client.channels.get(data.channel.id) || new PartialGuildChannel(this.client, data.channel);
+
+  }, {
+    key: 'delete',
+
 
     /**
-     * The timestamp the invite was created at
-     * @type {number}
+     * Deletes this invite
+     * @returns {Promise<Invite>}
      */
-    this.createdTimestamp = new Date(data.created_at).getTime();
-  }
+    value: function _delete() {
+      return this.client.rest.methods.deleteInvite(this);
+    }
 
-  /**
-   * The time the invite was created
-   * @type {Date}
-   * @readonly
-   */
-  get createdAt() {
-    return new Date(this.createdTimestamp);
-  }
+    /**
+     * When concatenated with a string, this automatically concatenates the invite's URL instead of the object.
+     * @returns {string}
+     * @example
+     * // logs: Invite: https://discord.gg/A1b2C3
+     * console.log(`Invite: ${invite}`);
+     */
 
-  /**
-   * The timestamp the invite will expire at
-   * @type {number}
-   * @readonly
-   */
-  get expiresTimestamp() {
-    return this.createdTimestamp + (this.maxAge * 1000);
-  }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return this.url;
+    }
+  }, {
+    key: 'createdAt',
+    get: function get() {
+      return new Date(this.createdTimestamp);
+    }
 
-  /**
-   * The time the invite will expire
-   * @type {Date}
-   * @readonly
-   */
-  get expiresAt() {
-    return new Date(this.expiresTimestamp);
-  }
+    /**
+     * The timestamp the invite will expire at
+     * @type {number}
+     * @readonly
+     */
 
-  /**
-   * The URL to the invite
-   * @type {string}
-   * @readonly
-   */
-  get url() {
-    return Constants.Endpoints.inviteLink(this.code);
-  }
+  }, {
+    key: 'expiresTimestamp',
+    get: function get() {
+      return this.createdTimestamp + this.maxAge * 1000;
+    }
 
-  /**
-   * Deletes this invite
-   * @returns {Promise<Invite>}
-   */
-  delete() {
-    return this.client.rest.methods.deleteInvite(this);
-  }
+    /**
+     * The time the invite will expire
+     * @type {Date}
+     * @readonly
+     */
 
-  /**
-   * When concatenated with a string, this automatically concatenates the invite's URL instead of the object.
-   * @returns {string}
-   * @example
-   * // logs: Invite: https://discord.gg/A1b2C3
-   * console.log(`Invite: ${invite}`);
-   */
-  toString() {
-    return this.url;
-  }
-}
+  }, {
+    key: 'expiresAt',
+    get: function get() {
+      return new Date(this.expiresTimestamp);
+    }
+
+    /**
+     * The URL to the invite
+     * @type {string}
+     * @readonly
+     */
+
+  }, {
+    key: 'url',
+    get: function get() {
+      return Constants.Endpoints.inviteLink(this.code);
+    }
+  }]);
+
+  return Invite;
+}();
 
 module.exports = Invite;

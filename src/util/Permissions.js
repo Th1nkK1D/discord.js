@@ -1,28 +1,39 @@
-const Constants = require('../util/Constants');
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Constants = require('../util/Constants');
 
 /**
  * Data structure that makes it easy to interact with a permission bitfield. All {@link GuildMember}s have a set of
  * permissions in their guild, and each channel in the guild may also have {@link PermissionOverwrites} for the member
  * that override their default permissions.
  */
-class Permissions {
+
+var Permissions = function () {
   /**
    * @param {GuildMember} [member] Member the permissions are for **(deprecated)**
    * @param {number} bitfield Permissions bitfield to read from
    */
-  constructor(member, bitfield) {
+  function Permissions(member, bitfield) {
+    _classCallCheck(this, Permissions);
+
     /**
      * Member the permissions are for
      * @type {GuildMember}
      * @deprecated
      */
-    this.member = typeof member === 'object' ? member : null;
+    this.member = (typeof member === 'undefined' ? 'undefined' : _typeof(member)) === 'object' ? member : null;
 
     /**
      * Bitfield of the packed permissions
      * @type {number}
      */
-    this.bitfield = typeof member === 'object' ? bitfield : member;
+    this.bitfield = (typeof member === 'undefined' ? 'undefined' : _typeof(member)) === 'object' ? bitfield : member;
   }
 
   /**
@@ -31,132 +42,200 @@ class Permissions {
    * @see {@link Permissions#bitfield}
    * @deprecated
    */
-  get raw() {
-    return this.bitfield;
-  }
 
-  set raw(raw) {
-    this.bitfield = raw;
-  }
 
-  /**
-   * Checks whether the bitfield has a permission, or multiple permissions.
-   * @param {PermissionResolvable|PermissionResolvable[]} permission Permission(s) to check for
-   * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
-   * @returns {boolean}
-   */
-  has(permission, checkAdmin = true) {
-    if (permission instanceof Array) return permission.every(p => this.has(p, checkAdmin));
-    permission = this.constructor.resolve(permission);
-    if (checkAdmin && (this.bitfield & this.constructor.FLAGS.ADMINISTRATOR) > 0) return true;
-    return (this.bitfield & permission) === permission;
-  }
+  _createClass(Permissions, [{
+    key: 'has',
 
-  /**
-   * Gets all given permissions that are missing from the bitfield.
-   * @param {PermissionResolvable[]} permissions Permissions to check for
-   * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
-   * @returns {PermissionResolvable[]}
-   */
-  missing(permissions, checkAdmin = true) {
-    return permissions.filter(p => !this.has(p, checkAdmin));
-  }
 
-  /**
-   * Adds permissions to this one, creating a new instance to represent the new bitfield.
-   * @param {...PermissionResolvable} permissions Permissions to add
-   * @returns {Permissions}
-   */
-  add(...permissions) {
-    let total = 0;
-    for (let p = 0; p < permissions.length; p++) {
-      const perm = this.constructor.resolve(permissions[p]);
-      if ((this.bitfield & perm) !== perm) total |= perm;
+    /**
+     * Checks whether the bitfield has a permission, or multiple permissions.
+     * @param {PermissionResolvable|PermissionResolvable[]} permission Permission(s) to check for
+     * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
+     * @returns {boolean}
+     */
+    value: function has(permission) {
+      var _this = this;
+
+      var checkAdmin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+      if (permission instanceof Array) return permission.every(function (p) {
+        return _this.has(p, checkAdmin);
+      });
+      permission = this.constructor.resolve(permission);
+      if (checkAdmin && (this.bitfield & this.constructor.FLAGS.ADMINISTRATOR) > 0) return true;
+      return (this.bitfield & permission) === permission;
     }
-    return new this.constructor(this.member, this.bitfield | total);
-  }
 
-  /**
-   * Removes permissions to this one, creating a new instance to represent the new bitfield.
-   * @param {...PermissionResolvable} permissions Permissions to remove
-   * @returns {Permissions}
-   */
-  remove(...permissions) {
-    let total = 0;
-    for (let p = 0; p < permissions.length; p++) {
-      const perm = this.constructor.resolve(permissions[p]);
-      if ((this.bitfield & perm) === perm) total |= perm;
+    /**
+     * Gets all given permissions that are missing from the bitfield.
+     * @param {PermissionResolvable[]} permissions Permissions to check for
+     * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
+     * @returns {PermissionResolvable[]}
+     */
+
+  }, {
+    key: 'missing',
+    value: function missing(permissions) {
+      var _this2 = this;
+
+      var checkAdmin = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+      return permissions.filter(function (p) {
+        return !_this2.has(p, checkAdmin);
+      });
     }
-    return new this.constructor(this.member, this.bitfield & ~total);
-  }
 
-  /**
-   * Gets an object mapping permission name (like `READ_MESSAGES`) to a {@link boolean} indicating whether the
-   * permission is available.
-   * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
-   * @returns {Object}
-   */
-  serialize(checkAdmin = true) {
-    const serialized = {};
-    for (const perm in this.constructor.FLAGS) serialized[perm] = this.has(perm, checkAdmin);
-    return serialized;
-  }
+    /**
+     * Adds permissions to this one, creating a new instance to represent the new bitfield.
+     * @param {...PermissionResolvable} permissions Permissions to add
+     * @returns {Permissions}
+     */
 
-  /**
-   * Checks whether the user has a certain permission, e.g. `READ_MESSAGES`.
-   * @param {PermissionResolvable} permission The permission to check for
-   * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permission
-   * @returns {boolean}
-   * @see {@link Permissions#has}
-   * @deprecated
-   */
-  hasPermission(permission, explicit = false) {
-    return this.has(permission, !explicit);
-  }
+  }, {
+    key: 'add',
+    value: function add() {
+      var total = 0;
 
-  /**
-   * Checks whether the user has all specified permissions.
-   * @param {PermissionResolvable[]} permissions The permissions to check for
-   * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permissions
-   * @returns {boolean}
-   * @see {@link Permissions#has}
-   * @deprecated
-   */
-  hasPermissions(permissions, explicit = false) {
-    return this.has(permissions, !explicit);
-  }
+      for (var _len = arguments.length, permissions = Array(_len), _key = 0; _key < _len; _key++) {
+        permissions[_key] = arguments[_key];
+      }
 
-  /**
-   * Checks whether the user has all specified permissions, and lists any missing permissions.
-   * @param {PermissionResolvable[]} permissions The permissions to check for
-   * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permissions
-   * @returns {PermissionResolvable[]}
-   * @see {@link Permissions#missing}
-   * @deprecated
-   */
-  missingPermissions(permissions, explicit = false) {
-    return this.missing(permissions, !explicit);
-  }
+      for (var p = 0; p < permissions.length; p++) {
+        var perm = this.constructor.resolve(permissions[p]);
+        if ((this.bitfield & perm) !== perm) total |= perm;
+      }
+      return new this.constructor(this.member, this.bitfield | total);
+    }
 
-  /**
-   * Data that can be resolved to give a permission number. This can be:
-   * - A string (see {@link Permissions.flags})
-   * - A permission number
-   * @typedef {string|number} PermissionResolvable
-   */
+    /**
+     * Removes permissions to this one, creating a new instance to represent the new bitfield.
+     * @param {...PermissionResolvable} permissions Permissions to remove
+     * @returns {Permissions}
+     */
 
-  /**
-   * Resolves permissions to their numeric form.
-   * @param {PermissionResolvable|Permissions[]} permission - Permission(s) to resolve
-   * @returns {number|number[]}
-   */
-  static resolve(permission) {
-    if (permission instanceof Array) return permission.map(p => this.resolve(p));
-    if (typeof permission === 'string') permission = this.FLAGS[permission];
-    if (typeof permission !== 'number' || permission < 1) throw new RangeError(Constants.Errors.NOT_A_PERMISSION);
-    return permission;
-  }
-}
+  }, {
+    key: 'remove',
+    value: function remove() {
+      var total = 0;
+
+      for (var _len2 = arguments.length, permissions = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        permissions[_key2] = arguments[_key2];
+      }
+
+      for (var p = 0; p < permissions.length; p++) {
+        var perm = this.constructor.resolve(permissions[p]);
+        if ((this.bitfield & perm) === perm) total |= perm;
+      }
+      return new this.constructor(this.member, this.bitfield & ~total);
+    }
+
+    /**
+     * Gets an object mapping permission name (like `READ_MESSAGES`) to a {@link boolean} indicating whether the
+     * permission is available.
+     * @param {boolean} [checkAdmin=true] Whether to allow the administrator permission to override
+     * @returns {Object}
+     */
+
+  }, {
+    key: 'serialize',
+    value: function serialize() {
+      var checkAdmin = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+      var serialized = {};
+      for (var perm in this.constructor.FLAGS) {
+        serialized[perm] = this.has(perm, checkAdmin);
+      }return serialized;
+    }
+
+    /**
+     * Checks whether the user has a certain permission, e.g. `READ_MESSAGES`.
+     * @param {PermissionResolvable} permission The permission to check for
+     * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permission
+     * @returns {boolean}
+     * @see {@link Permissions#has}
+     * @deprecated
+     */
+
+  }, {
+    key: 'hasPermission',
+    value: function hasPermission(permission) {
+      var explicit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      return this.has(permission, !explicit);
+    }
+
+    /**
+     * Checks whether the user has all specified permissions.
+     * @param {PermissionResolvable[]} permissions The permissions to check for
+     * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permissions
+     * @returns {boolean}
+     * @see {@link Permissions#has}
+     * @deprecated
+     */
+
+  }, {
+    key: 'hasPermissions',
+    value: function hasPermissions(permissions) {
+      var explicit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      return this.has(permissions, !explicit);
+    }
+
+    /**
+     * Checks whether the user has all specified permissions, and lists any missing permissions.
+     * @param {PermissionResolvable[]} permissions The permissions to check for
+     * @param {boolean} [explicit=false] Whether to require the user to explicitly have the exact permissions
+     * @returns {PermissionResolvable[]}
+     * @see {@link Permissions#missing}
+     * @deprecated
+     */
+
+  }, {
+    key: 'missingPermissions',
+    value: function missingPermissions(permissions) {
+      var explicit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      return this.missing(permissions, !explicit);
+    }
+
+    /**
+     * Data that can be resolved to give a permission number. This can be:
+     * - A string (see {@link Permissions.flags})
+     * - A permission number
+     * @typedef {string|number} PermissionResolvable
+     */
+
+    /**
+     * Resolves permissions to their numeric form.
+     * @param {PermissionResolvable|Permissions[]} permission - Permission(s) to resolve
+     * @returns {number|number[]}
+     */
+
+  }, {
+    key: 'raw',
+    get: function get() {
+      return this.bitfield;
+    },
+    set: function set(raw) {
+      this.bitfield = raw;
+    }
+  }], [{
+    key: 'resolve',
+    value: function resolve(permission) {
+      var _this3 = this;
+
+      if (permission instanceof Array) return permission.map(function (p) {
+        return _this3.resolve(p);
+      });
+      if (typeof permission === 'string') permission = this.FLAGS[permission];
+      if (typeof permission !== 'number' || permission < 1) throw new RangeError(Constants.Errors.NOT_A_PERMISSION);
+      return permission;
+    }
+  }]);
+
+  return Permissions;
+}();
 
 /**
  * Numeric permission flags. All available properties:
@@ -192,6 +271,8 @@ class Permissions {
  * @type {Object}
  * @see {@link https://discordapp.com/developers/docs/topics/permissions}
  */
+
+
 Permissions.FLAGS = {
   CREATE_INSTANT_INVITE: 1 << 0,
   KICK_MEMBERS: 1 << 1,
@@ -224,14 +305,16 @@ Permissions.FLAGS = {
   MANAGE_ROLES: 1 << 28,
   MANAGE_ROLES_OR_PERMISSIONS: 1 << 28,
   MANAGE_WEBHOOKS: 1 << 29,
-  MANAGE_EMOJIS: 1 << 30,
+  MANAGE_EMOJIS: 1 << 30
 };
 
 /**
  * Bitfield representing every permission combined
  * @type {number}
  */
-Permissions.ALL = Object.keys(Permissions.FLAGS).reduce((all, p) => all | Permissions.FLAGS[p], 0);
+Permissions.ALL = Object.keys(Permissions.FLAGS).reduce(function (all, p) {
+  return all | Permissions.FLAGS[p];
+}, 0);
 
 /**
  * Bitfield representing the default permissions for users
